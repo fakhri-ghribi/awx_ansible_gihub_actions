@@ -2,13 +2,14 @@ name: Run AWX Playbook
 
 on:
   schedule:
-    - cron: '0 * * * *'  # This will run the workflow every hour. Adjust as needed.
+    - cron: '0 * * * *'
   push:
     branches:
       - main  # Adjust this to your target branch
 
 jobs:
   run-playbook:
+    runs-on: self-hosted 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
