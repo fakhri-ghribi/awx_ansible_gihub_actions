@@ -45,41 +45,6 @@ jobs:
           echo "Project ID: $PROJECT_ID"
 
           PLAYBOOK_PATH="playbook_awx.yml"  # Update with your actual playbook path
-          
-          # Trigger the job
-          echo "Triggering job for playbook: $PLAYBOOK_PATH..."
-          JOB_ID=$(curl -s -u $AWX_USERNAME:$AWX_PASSWORD \
-            -X POST "$AWX_HOST/api/v2/jobs/" \
-            -H "Content-Type: application/json" \
-            -d "{\"project\": $PROJECT_ID, \"playbook\": \"$PLAYBOOK_PATH\"}" | jq -r '.id')
-
-          if [ -z "$JOB_ID" ]; then
-            echo "Failed to trigger job. Please check the playbook path and project ID."
-            exit 1
-          fi
-
-          echo "Job ID: $JOB_ID"
-
-          # Optional: wait for the job to finish and retrieve the status
-          echo "Waiting for job to finish..."
-          TIMEOUT=600  # Set timeout to 10 minutes
-          START_TIME=$(date +%s)
-
-          while true; do
-            JOB_STATUS=$(curl -s -u $AWX_USERNAME:$AWX_PASSWORD \
-              -X GET "$AWX_HOST/api/v2/jobs/$JOB_ID/" | jq -r '.status')
-            echo "Current job status: $JOB_STATUS"
-            if [[ "$JOB_STATUS" == "successful" || "$JOB_STATUS" == "failed" ]]; then
-              break
-            fi
-            
-            # Check for timeout
-            CURRENT_TIME=$(date +%s)
-            ELAPSED_TIME=$(( CURRENT_TIME - START_TIME ))
-            if [ $ELAPSED_TIME -ge $TIMEOUT ]; then
-              echo "Job did not complete in time. Exiting..."
-              exit 1
-            fi
-            
-            sleep 5
+          echo $PLAYBOOK_PATH
+         
           done
