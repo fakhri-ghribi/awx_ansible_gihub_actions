@@ -1,0 +1,9 @@
+---
+- name: Demo Playbook
+  hosts: localhost
+  tasks:
+    - name: Print hello world
+      shell: echo "Hello, AWX!"
+    
+    - name: Print current date
+      shell: echo "Today is $(date)"
