@@ -1,0 +1,55 @@
+name: Run AWX Playbook
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # This will run the workflow every hour. Adjust as needed.
+  push:
+    branches:
+      - main  # Adjust this to your target branch
+
+jobs:
+  run-playbook:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up environment
+        env:
+          AWX_HOST: ${{ secrets.AWX_HOST }}          # AWX server URL from ngrok
+          AWX_USERNAME: ${{ secrets.AWX_USERNAME }}  # AWX admin username
+          AWX_PASSWORD: ${{ secrets.AWX_PASSWORD }}  # AWX admin password
+        run: |
+          echo "Environment variables set."
+
+      - name: Run Playbook on AWX
+        env:
+          AWX_HOST: ${{ secrets.AWX_HOST }}
+          AWX_USERNAME: ${{ secrets.AWX_USERNAME }}
+          AWX_PASSWORD: ${{ secrets.AWX_PASSWORD }}
+        run: |
+          # Get the project ID for the linked GitHub repo
+          PROJECT_ID=$(curl -s -u $AWX_USERNAME:$AWX_PASSWORD \
+            -X GET "$AWX_HOST/api/v2/projects/?name=First_AWX_Github" | jq -r '.results[0].id')
+
+          PLAYBOOK_PATH="playbook_awx.yml"  # Update with your actual playbook path
+
+          # Trigger the job
+          JOB_ID=$(curl -s -u $AWX_USERNAME:$AWX_PASSWORD \
+            -X POST "$AWX_HOST/api/v2/jobs/" \
+            -H "Content-Type: application/json" \
+            -d "{\"project\": $PROJECT_ID, \"playbook\": \"$PLAYBOOK_PATH\"}" | jq -r '.id')
+
+          echo "Job ID: $JOB_ID"
+
+          # Optional: wait for the job to finish and retrieve the status
+          while true; do
+            JOB_STATUS=$(curl -s -u $AWX_USERNAME:$AWX_PASSWORD \
+              -X GET "$AWX_HOST/api/v2/jobs/$JOB_ID/" | jq -r '.status')
+            echo "Current job status: $JOB_STATUS"
+            if [[ "$JOB_STATUS" == "successful" || "$JOB_STATUS" == "failed" ]]; then
+              break
+            fi
+            sleep 5
+          done
